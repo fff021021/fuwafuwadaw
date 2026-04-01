@@ -18,6 +18,7 @@ import PluginRack from './components/PluginRack';
 import Visualizer from './components/Visualizer';
 import midi from './audio/Midi';
 import recorder from './audio/Recorder';
+import AudioTrackPlayer from './audio/AudioTrack';
 import exporter from './audio/Exporter';
 import WaveformView from './components/WaveformView';
 import Playhead from './components/Playhead';
@@ -226,7 +227,7 @@ function App() {
     const player = new AudioTrackPlayer(engine.ctx, pitch.input);
     await player.loadFile(file);
 
-    setTracks([...tracks, {
+    const nextTracks = [...tracks, {
       id: Date.now(),
       name: file.name,
       player: player,
@@ -236,7 +237,9 @@ function App() {
       solo: false,
       sequence: [],
       setVolume: (v) => gain.gain.setTargetAtTime(v, engine.ctx.currentTime, 0.02)
-    }]);
+    }];
+    setTracks(nextTracks);
+    tracksRef.current = nextTracks;
   };
 
   const saveProject = () => {
