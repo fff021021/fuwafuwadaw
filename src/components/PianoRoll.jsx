@@ -16,6 +16,9 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep, zoom = 1, 
 
   const toggleNote = (noteIndex, stepIndex) => {
     const newSeq = [...sequence];
+    // Lazy-fill if needed (though App.jsx handles it now)
+    while (newSeq.length <= stepIndex) newSeq.push([]);
+    
     if (!newSeq[stepIndex]) newSeq[stepIndex] = [];
     
     const notePos = newSeq[stepIndex].findIndex(n => n.freq === NOTES[noteIndex].freq);
@@ -27,7 +30,6 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep, zoom = 1, 
         velocity: 0.8, 
         duration: 0.25 
       });
-      // Preview sound
       if (activeTrack.synth) activeTrack.synth.playNote(NOTES[noteIndex].freq, 0.5);
     }
     setSequence(newSeq);
@@ -43,7 +45,7 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep, zoom = 1, 
         ))}
       </div>
       
-      <div className="grid" style={{ gridTemplateColumns: `repeat(${steps}, var(--cell-width))` }}>
+      <div className="grid" style={{ display: 'grid', gridTemplateColumns: `repeat(${steps}, var(--cell-width))` }}>
         {NOTES.map((_, noteIdx) => (
           <div key={noteIdx} className="grid-row">
             {[...Array(steps)].map((_, stepIdx) => {

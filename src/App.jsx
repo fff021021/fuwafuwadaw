@@ -375,7 +375,7 @@ function App() {
   const activeTrack = tracks.find(t => t.id === activeTrackId);
 
   return (
-    <div className="daw-container">
+    <div className="daw-container" style={{ '--cell-width': `${40 * zoom}px` }}>
       {!initialized ? (
         <div className="init-screen glass">
           <h1>FUWA DAW</h1>
@@ -393,7 +393,22 @@ function App() {
               zoom={zoom} 
               setZoom={setZoom} 
               projectLength={projectLength} 
-              setProjectLength={setProjectLength} 
+              setProjectLength={(val) => {
+                const newLen = parseInt(val) || 64;
+                setProjectLength(newLen);
+                // Dynamically expand sequences if needed
+                const next = tracks.map(t => {
+                  if (t.sequence && t.sequence.length < newLen) {
+                    const extra = Array(newLen - t.sequence.length).fill(null).map(() => []);
+                    return { ...t, sequence: [...t.sequence, ...extra] };
+                  }
+                  return t;
+                });
+                if (next !== tracks) {
+                  setTracks(next);
+                  tracksRef.current = next;
+                }
+              }} 
               bpm={bpm}
               onBpmChange={setBpm}
               currentStep={currentStep}
