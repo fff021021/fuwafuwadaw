@@ -135,9 +135,17 @@ h1, h2, h3 {
   border: 1px solid var(--glass-border);
 }
 
-.waveform-container canvas {
+.waveform-container {
   width: 100%;
-  height: 100%;
+  overflow-x: auto;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  position: relative;
+}
+
+.waveform-container canvas {
+  display: block;
+  height: 200px;
   cursor: crosshair;
 }
 
