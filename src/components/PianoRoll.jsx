@@ -37,7 +37,7 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep, zoom = 1, 
 
   return (
     <div className="piano-roll" style={{ "--cell-width": `${cellWidth}px` }}>
-      <div className="piano-keys" style={{ position: 'sticky', left: 0, zIndex: 10, background: 'var(--bg-secondary)', borderRight: '2px solid #000' }}>
+      <div className="piano-keys" style={{ position: 'absolute', left: 0, width: '60px', zIndex: 150, background: 'var(--bg-secondary)', borderRight: '1px solid #333' }}>
         {NOTES.map((note, i) => (
           <div key={i} className={`key ${note.name.includes('#') ? 'black' : 'white'}`}>
             {note.name}

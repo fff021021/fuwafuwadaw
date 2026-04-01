@@ -450,13 +450,22 @@ function App() {
               ))}
             </div>
             
-            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', display: 'flex', backgroundColor: '#050505' }}>
-              {/* Sticky Sidebar for both PianoRoll and Waveform (Spacer) */}
-              <div className="timeline-sidebar-spacer" style={{ width: '60px', minWidth: '60px', position: 'sticky', left: 0, background: '#111', zIndex: 100, borderRight: '1px solid #333' }}>
-                {activeTrack?.player && <div style={{ fontSize: '9px', padding: '4px', color: '#888' }}>AUDIO</div>}
-              </div>
+            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', backgroundColor: '#050505' }}>
+              <div className="timeline-main" style={{ position: 'relative', width: 'fit-content', minWidth: '100%', paddingLeft: '60px' }}>
+                <div className="timeline-sidebar-spacer" style={{ 
+                  width: '60px', 
+                  height: '100%', 
+                  position: 'absolute', 
+                  left: 0, 
+                  top: 0, 
+                  background: '#111', 
+                  zIndex: 200, 
+                  borderRight: '1px solid #333',
+                  pointerEvents: 'none' // Let clicks pass through if needed
+                }}>
+                  {activeTrack?.player && <div style={{ fontSize: '9px', padding: '10px 4px', color: '#888' }}>AUDIO</div>}
+                </div>
 
-              <div className="timeline-main" style={{ position: 'relative', flex: '0 0 auto', width: 'fit-content', minWidth: '100%' }}>
                 <Playhead 
                   currentStep={currentStep >= 0 ? currentStep : seekPos} 
                   projectLength={projectLength} 
