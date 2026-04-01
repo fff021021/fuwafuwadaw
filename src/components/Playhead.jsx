@@ -1,14 +1,15 @@
 import React from 'react';
 
 const Playhead = ({ currentStep, projectLength, zoom, onSeek }) => {
-  const width = projectLength * 40 * zoom; // Assuming 40px base width per step
-  const position = ((currentStep + 1) / projectLength) * width;
+  const PIXELS_PER_STEP = 40;
+  const width = projectLength * PIXELS_PER_STEP * zoom; 
+  const position = (currentStep / projectLength) * width;
 
   const handleClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const newStep = Math.floor((x / width) * projectLength);
-    onSeek(newStep);
+    const newStep = Math.floor(x / (PIXELS_PER_STEP * zoom));
+    onSeek(Math.max(0, Math.min(projectLength - 1, newStep)));
   };
 
   return (

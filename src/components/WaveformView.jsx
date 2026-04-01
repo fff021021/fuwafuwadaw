@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 
-const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => {
+const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0, bpm = 120 }) => {
   const canvasRef = useRef(null);
-  const canvasWidth = (buffer ? buffer.duration * 10 * 16 * zoom : 1000); // Scale with zoom
+  const PIXELS_PER_STEP = 40;
+  const secondsPerStep = (60 / bpm) / 4;
+  const canvasWidth = (buffer ? (buffer.duration / secondsPerStep) * PIXELS_PER_STEP * zoom : 1000); 
 
   // Default to one full region if empty
   useEffect(() => {

@@ -265,16 +265,15 @@ function App() {
       const initialOffset = seekPos * secondsPerStep;
 
       scheduler.start(engine.ctx, tracks, (step, time) => {
+        console.log('Step:', step, 'Time:', time, 'Max:', projectLength);
         setCurrentStep(step);
         
-        // Initial start of audio tracks from seek position
         if (step === seekPos) {
           tracksRef.current.forEach(track => {
             if (track.player) track.player.play(time, initialOffset, track.regions || []);
           });
         }
         
-        // Loop reset playback
         if (step === 0 && seekPos !== 0) {
           tracksRef.current.forEach(track => {
             if (track.player) track.player.play(time, 0, track.regions || []);
@@ -476,6 +475,7 @@ function App() {
                   buffer={activeTrack.player.buffer} 
                   regions={activeTrack.regions || []} 
                   zoom={zoom}
+                  bpm={bpm}
                   onUpdateRegions={(regs) => {
                     const next = tracks.map(t => t.id === activeTrackId ? { ...t, regions: regs } : t);
                     setTracks(next);
