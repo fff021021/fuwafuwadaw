@@ -19,6 +19,9 @@ import Visualizer from './components/Visualizer';
 import midi from './audio/Midi';
 import recorder from './audio/Recorder';
 import AudioTrackPlayer from './audio/AudioTrack';
+import exporter from './audio/Exporter';
+import WaveformView from './components/WaveformView';
+import scheduler from './audio/Scheduler';
 
 function App() {
   const [initialized, setInitialized] = useState(false);
@@ -199,6 +202,15 @@ function App() {
     a.click();
   };
 
+  const exportProject = async () => {
+    const blob = await exporter.exportWav(tracks, 120);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mixdown.wav';
+    a.click();
+  };
+
   const loadProject = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -264,6 +276,7 @@ function App() {
               <label className="small-btn">IMPORT<input type="file" accept="audio/*" hidden onChange={importAudio} /></label>
               <button className="small-btn" onClick={saveProject}>SAVE</button>
               <label className="small-btn">LOAD<input type="file" hidden onChange={loadProject} /></label>
+              <button className="small-btn active" onClick={exportProject}>EXPORT</button>
               <Visualizer />
               <div className="user-info">MASTER</div>
             </div>
@@ -285,12 +298,19 @@ function App() {
             </div>
             
             <div className="timeline-container">
-              <PianoRoll 
-                activeTrack={activeTrack} 
-                sequence={activeTrack?.sequence || []} 
-                setSequence={setTrackSequence}
-                currentStep={currentStep}
-              />
+              {activeTrack?.player ? (
+                <WaveformView 
+                  buffer={activeTrack.player.buffer} 
+                  regions={activeTrack.regions || []} 
+                />
+              ) : (
+                <PianoRoll 
+                  activeTrack={activeTrack} 
+                  sequence={activeTrack?.sequence || []} 
+                  setSequence={setTrackSequence}
+                  currentStep={currentStep}
+                />
+              )}
             </div>
           </main>
 
