@@ -1,0 +1,46 @@
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--bg-secondary);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.play-btn {
+  min-width: 100px;
+  justify-content: center;
+}
+
+.bpm-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bpm-control label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.bpm-control input {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  color: var(--accent-primary);
+  width: 50px;
+  padding: 4px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-align: center;
+}
+
+.time-display {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-success);
+  font-size: 14px;
+  min-width: 80px;
+  text-align: right;
+}

@@ -1,0 +1,108 @@
+.daw-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+.init-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 100;
+  background: var(--bg-primary);
+}
+
+header {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 10;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 20px;
+  background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.track-item {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 14px;
+  background: rgba(255,255,255,0.02);
+}
+
+.track-item.active {
+  background: rgba(0, 229, 255, 0.15);
+  border-left: 3px solid var(--accent-primary);
+}
+
+.timeline-container {
+  flex: 1;
+  position: relative;
+  background-image: 
+    linear-gradient(var(--glass-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+  background-size: 40px 40px; /* Grid */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+footer {
+  height: 200px; /* Increased height for rack */
+  border-top: 1px solid var(--glass-border);
+}
+
+.footer-content {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.placeholder-msg {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 14px;
+}
