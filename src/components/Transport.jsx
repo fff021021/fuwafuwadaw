@@ -57,6 +57,28 @@ const Transport = ({ onTogglePlay, zoom, setZoom, projectLength, setProjectLengt
         <span className="seconds">{formatTime(currentStep)}</span>
       </div>
 
+      <div className="transport-group">
+        <label>LENGTH (Bars)</label>
+        <input 
+          type="number" 
+          value={Math.floor(projectLength / 16)} 
+          onChange={(e) => setProjectLength(Math.max(1, parseInt(e.target.value) || 0) * 16)}
+          style={{ width: '40px' }}
+        />
+      </div>
+
+      <div className="transport-group">
+        <label>ZOOM</label>
+        <input 
+          type="range" 
+          min="0.1" 
+          max="3.0" 
+          step="0.1" 
+          value={zoom} 
+          onChange={(e) => setZoom(parseFloat(e.target.value))}
+        />
+      </div>
+
       <style jsx>{`
         .transport {
           display: flex;
