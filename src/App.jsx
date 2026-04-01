@@ -42,120 +42,37 @@ function App() {
   const tracksRef = useRef([]);
   const voicesRef = useRef({}); // To track MIDI voices
 
-  useEffect(() => {
-    const loadSession = async () => {
-      const data = await persistence.loadProject();
-      if (data && data.tracks) {
-        // Reconstruct audio engine objects for each track
-        const rehydrated = await Promise.all(data.tracks.map(async (t) => {
-          const gain = engine.ctx.createGain();
-          gain.connect(engine.masterGain);
-          if (t.gain) gain.gain.value = t.gain;
-
-          let synth = null;
-          let player = null;
-          let plugins = [];
-
-          // Plugin Map for Reconstruction
-          const pluginClasses = {
-            'Compressor': Compressor,
-            'EQ': EQ,
-            'PitchShifter': PitchShifter,
-            'Reverb': Reverb,
-            'Delay': Delay,
-            'Gate': Gate,
-            'DeEsser': DeEsser
-          };
-
-          // Reconstruct Plugins from state
-          if (t.pluginStates && t.pluginStates.length > 0) {
-            let lastNode = null;
-            t.pluginStates.forEach((ps, idx) => {
-              const PluginClass = pluginClasses[ps.name];
-              if (PluginClass) {
-                const p = new PluginClass(engine.ctx);
-                // Apply saved params
-                if (ps.params) {
-                  Object.keys(ps.params).forEach(key => {
-                    if (p[key] && typeof p[key].setTargetAtTime === 'function') {
-                      p[key].setTargetAtTime(ps.params[key], 0, 0);
-                    } else {
-                      p[key] = ps.params[key];
-                    }
-                  });
-                }
-                plugins.push(p);
-                
-                // Connection Chain
-                if (idx === 0) {
-                  // Connect to gain later
-                } else {
-                  const prev = plugins[idx - 1];
-                  // Connect prev output to current input
-                  const prevOutput = prev.output || prev.node;
-                  const currentInput = p.input || p.node;
-                  if (prevOutput && currentInput) prevOutput.connect(currentInput);
-                }
-              }
-            });
-
-            // Connect Chain to Gain
-            if (plugins.length > 0) {
-              const finalPlugin = plugins[plugins.length - 1];
-              const finalOutput = finalPlugin.output || finalPlugin.node;
-              if (finalOutput) finalOutput.connect(gain);
-            }
-          } else {
-            // Fallback to default gain connection if no plugins
-            // (Will be connected from synth/player below)
-          }
-
-          const firstInput = plugins.length > 0 ? (plugins[0].input || plugins[0].node) : gain;
-
-          if (t.type === 'synth') {
-            synth = new Synth(engine.ctx, firstInput);
-          } else if (t.blob) {
-            player = new AudioTrackPlayer(engine.ctx, firstInput);
-            await player.loadBlob(t.blob);
-          }
-
-          return {
-            ...t,
-            synth,
-            player,
-            gainNode: gain,
-            plugins,
-            setVolume: (v) => gain.gain.setTargetAtTime(v, engine.ctx.currentTime, 0.02)
-          };
-        }));
-        setTracks(rehydrated);
-        tracksRef.current = rehydrated;
-        setProjectLength(data.projectLength || 64);
-        setInitialized(true);
-      }
-    };
-    loadSession();
-  }, []);
+  // loadSession is moved to handleInit to ensure engine.ctx exists
 
   useEffect(() => {
     if (initialized && tracks.length > 0) {
       if (isPlaying) scheduler.updateTracks(tracks);
+      
+      // Serialize plugin states (extract values from AudioParams)
+      const sanitizedTracks = tracks.map(t => ({
+        id: t.id,
+        name: t.name,
+        type: t.synth ? 'synth' : 'audio',
+        sequence: t.sequence,
+        regions: t.regions,
+        gain: t.gainNode?.gain.value,
+        blob: t.player?.rawBlob,
+        pluginStates: t.plugins.map(p => {
+          const params = {};
+          if (p.params) {
+            Object.keys(p.params).forEach(k => {
+              // Extract numerical value from AudioParam if it exists
+              params[k] = (p.params[k] && typeof p.params[k].value === 'number') ? p.params[k].value : p.params[k];
+            });
+          }
+          return { name: p.name, params };
+        })
+      }));
+
       persistence.saveProject({
-        tracks: tracks.map(t => ({
-          id: t.id,
-          name: t.name,
-          type: t.synth ? 'synth' : 'audio',
-          sequence: t.sequence,
-          regions: t.regions,
-          gain: t.gainNode?.gain.value,
-          blob: t.player?.rawBlob,
-          pluginStates: t.plugins.map(p => ({
-            name: p.name,
-            params: p.params || {}
-          }))
-        })),
+        tracks: sanitizedTracks,
         projectLength
-      });
+      }).catch(err => console.error('Persistence failed:', err));
     }
   }, [tracks, projectLength, initialized]);
 
@@ -241,6 +158,50 @@ function App() {
     setTracks(newTracks);
     tracksRef.current = newTracks;
     setInitialized(true);
+
+    // After engine init, load saved session if any
+    const data = await persistence.loadProject();
+    if (data && data.tracks) {
+      console.log('Loading saved project...', data);
+      const rehydrated = await Promise.all(data.tracks.map(async (t) => {
+        const gain = engine.ctx.createGain();
+        gain.connect(engine.masterGain);
+        if (t.gain) gain.gain.value = t.gain;
+        let synth = null, player = null, plugins = [];
+        const pluginClasses = { 'Compressor': Compressor, 'EQ': EQ, 'PitchShifter': PitchShifter, 'Reverb': Reverb, 'Delay': Delay, 'Gate': Gate, 'DeEsser': DeEsser };
+        
+        if (t.pluginStates) {
+          t.pluginStates.forEach((ps, idx) => {
+            const Cls = pluginClasses[ps.name];
+            if (Cls) {
+              const p = new Cls(engine.ctx);
+              if (ps.params) {
+                Object.keys(ps.params).forEach(k => {
+                  if (p.params[k] && p.params[k].setTargetAtTime) p.params[k].setTargetAtTime(ps.params[k], 0, 0);
+                  else p.params[k] = ps.params[k];
+                });
+              }
+              plugins.push(p);
+              if (idx > 0) {
+                const prevOut = plugins[idx-1].output || plugins[idx-1].node;
+                const currIn = p.input || p.node;
+                prevOut.connect(currIn);
+              }
+            }
+          });
+          if (plugins.length > 0) (plugins[plugins.length-1].output || plugins[plugins.length-1].node).connect(gain);
+        }
+
+        const firstInput = plugins.length > 0 ? (plugins[0].input || plugins[0].node) : gain;
+        if (t.type === 'synth') synth = new Synth(engine.ctx, firstInput);
+        else if (t.blob) { player = new AudioTrackPlayer(engine.ctx, firstInput); await player.loadBlob(t.blob); }
+
+        return { ...t, synth, player, gainNode: gain, plugins, setVolume: (v) => gain.gain.setTargetAtTime(v, engine.ctx.currentTime, 0.02) };
+      }));
+      setTracks(rehydrated);
+      tracksRef.current = rehydrated;
+      setProjectLength(data.projectLength || 64);
+    }
   };
 
   const setTrackSequence = (newSeq) => {
