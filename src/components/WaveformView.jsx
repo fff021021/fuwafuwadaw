@@ -4,7 +4,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0, bpm =
   const canvasRef = useRef(null);
   const PIXELS_PER_STEP = 40;
   const secondsPerStep = (60 / bpm) / 4;
-  const canvasWidth = (buffer ? (buffer.duration / secondsPerStep) * PIXELS_PER_STEP * zoom : 1000); 
+  const canvasWidth = (buffer ? Math.ceil((buffer.duration / secondsPerStep) * PIXELS_PER_STEP * zoom) : 1000); 
 
   // Default to one full region if empty
   useEffect(() => {

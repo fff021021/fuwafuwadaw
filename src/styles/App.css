@@ -87,7 +87,7 @@ main {
   background-size: 40px 40px; /* Grid */
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 footer {

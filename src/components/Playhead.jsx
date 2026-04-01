@@ -20,11 +20,12 @@ const Playhead = ({ currentStep, projectLength, zoom = 1, onSeek, style }) => {
         position: 'absolute', 
         left: 0, 
         top: 0, 
-        width: `${width}px`, 
+        width: '100%', 
         height: '100%', 
         cursor: 'pointer',
         zIndex: 50,
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        ...style
       }}
     >
       <div 

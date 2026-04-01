@@ -463,10 +463,9 @@ function App() {
             <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', backgroundColor: '#050505', flex: 1 }}>
               <div className="timeline-main" style={{ 
                 position: 'relative', 
-                width: `${Math.max(projectLength * 40 * zoom, (activeTrack?.player?.buffer?.duration / ((60/bpm)/4)) * 40 * zoom || 0)}px`, 
+                width: `${Math.max(projectLength * 40 * zoom, (activeTrack?.player?.buffer?.duration / ((60/bpm)/4)) * 40 * zoom || 0) + 60}px`, 
                 minWidth: '100%', 
-                paddingLeft: '60px',
-                height: '500px' // Ensure enough height
+                height: '500px'
               }}>
                 <div className="timeline-sidebar-spacer" style={{ 
                   width: '60px', 
@@ -482,35 +481,38 @@ function App() {
                   {activeTrack?.player && <div style={{ fontSize: '9px', padding: '10px 4px', color: '#888' }}>AUDIO</div>}
                 </div>
 
-                <Playhead 
-                  currentStep={currentStep >= 0 ? currentStep : seekPos} 
-                  projectLength={projectLength} 
-                  zoom={zoom} 
-                  onSeek={handleSeek} 
-                />
-                <div className="timeline-content-layer">
-                  {activeTrack?.player ? (
-                    <WaveformView 
-                      buffer={activeTrack.player.buffer} 
-                      regions={activeTrack.regions || []} 
-                      zoom={zoom}
-                      bpm={bpm}
-                      onUpdateRegions={(regs) => {
-                        const next = tracks.map(t => t.id === activeTrackId ? { ...t, regions: regs } : t);
-                        setTracks(next);
-                        tracksRef.current = next;
-                      }}
-                    />
-                  ) : (
-                    <PianoRoll 
-                      activeTrack={activeTrack} 
-                      sequence={activeTrack?.sequence || []} 
-                      setSequence={setTrackSequence}
-                      currentStep={currentStep}
-                      zoom={zoom}
-                      steps={projectLength}
-                    />
-                  )}
+                <div className="timeline-content-wrapper" style={{ position: 'relative', marginLeft: '60px' }}>
+                  <Playhead 
+                    currentStep={currentStep >= 0 ? currentStep : seekPos} 
+                    projectLength={projectLength} 
+                    zoom={zoom} 
+                    onSeek={handleSeek}
+                    style={{ width: '100%' }}
+                  />
+                  <div className="timeline-content-layer">
+                    {activeTrack?.player ? (
+                      <WaveformView 
+                        buffer={activeTrack.player.buffer} 
+                        regions={activeTrack.regions || []} 
+                        zoom={zoom}
+                        bpm={bpm}
+                        onUpdateRegions={(regs) => {
+                          const next = tracks.map(t => t.id === activeTrackId ? { ...t, regions: regs } : t);
+                          setTracks(next);
+                          tracksRef.current = next;
+                        }}
+                      />
+                    ) : (
+                      <PianoRoll 
+                        activeTrack={activeTrack} 
+                        sequence={activeTrack?.sequence || []} 
+                        setSequence={setTrackSequence}
+                        currentStep={currentStep}
+                        zoom={zoom}
+                        steps={projectLength}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
