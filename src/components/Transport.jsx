@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import engine from '../audio/Engine';
 import '../styles/Transport.css';
 
-const Transport = ({ onTogglePlay, zoom, setZoom, projectLength, setProjectLength, bpm, onBpmChange }) => {
+const Transport = ({ onTogglePlay, zoom, setZoom, projectLength, setProjectLength, bpm, onBpmChange, currentStep }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const togglePlay = () => {
@@ -14,6 +14,24 @@ const Transport = ({ onTogglePlay, zoom, setZoom, projectLength, setProjectLengt
   const handleBpmChange = (e) => {
     const value = Math.max(20, Math.min(300, parseInt(e.target.value) || 0));
     if (onBpmChange) onBpmChange(value);
+  };
+
+  const formatTime = (step) => {
+    if (step < 0) return "00:00.00";
+    const secondsPerStep = (60 / bpm) / 4;
+    const totalSeconds = step * secondsPerStep;
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    const ms = Math.floor((totalSeconds % 1) * 100);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+  };
+
+  const formatBarBeat = (step) => {
+    if (step < 0) return "1.1.1";
+    const bar = Math.floor(step / 16) + 1;
+    const beat = Math.floor((step % 16) / 4) + 1;
+    const sixteenth = (step % 4) + 1;
+    return `${bar}.${beat}.${sixteenth}`;
   };
 
   return (
@@ -35,7 +53,8 @@ const Transport = ({ onTogglePlay, zoom, setZoom, projectLength, setProjectLengt
       </div>
 
       <div className="time-display">
-        {engine.getCurrentTime().toFixed(2)}s
+        <span className="bar-beat">{formatBarBeat(currentStep)}</span>
+        <span className="seconds">{formatTime(currentStep)}</span>
       </div>
 
       <style jsx>{`

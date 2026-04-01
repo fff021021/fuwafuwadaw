@@ -394,6 +394,7 @@ function App() {
               setProjectLength={setProjectLength} 
               bpm={bpm}
               onBpmChange={setBpm}
+              currentStep={currentStep}
             />
             <div className="header-right">
               <button 
