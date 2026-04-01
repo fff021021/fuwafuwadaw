@@ -44,9 +44,51 @@ function App() {
   useEffect(() => {
     const loadSession = async () => {
       const data = await persistence.loadProject();
-      if (data) {
-        setTracks(data.tracks);
+      if (data && data.tracks) {
+        // Reconstruct audio engine objects for each track
+        const rehydrated = await Promise.all(data.tracks.map(async (t) => {
+          const gain = engine.ctx.createGain();
+          gain.connect(engine.masterGain);
+          if (t.gain) gain.gain.value = t.gain;
+
+          let synth = null;
+          let player = null;
+          let plugins = [];
+
+          // Setup Generic Plugin Chain
+          const comp = new Compressor(engine.ctx);
+          const eq = new EQ(engine.ctx);
+          const pitch = new PitchShifter(engine.ctx);
+          const rev = new Reverb(engine.ctx);
+          const delay = new Delay(engine.ctx);
+
+          pitch.connect(eq.input);
+          eq.connect(comp.node);
+          comp.connect(delay.input);
+          delay.connect(rev.input);
+          rev.connect(gain);
+          plugins = [pitch, eq, comp, delay, rev];
+
+          if (t.type === 'synth') {
+            synth = new Synth(engine.ctx, pitch.input);
+          } else if (t.blob) {
+            player = new AudioTrackPlayer(engine.ctx, pitch.input);
+            await player.loadBlob(t.blob);
+          }
+
+          return {
+            ...t,
+            synth,
+            player,
+            gainNode: gain,
+            plugins,
+            setVolume: (v) => gain.gain.setTargetAtTime(v, engine.ctx.currentTime, 0.02)
+          };
+        }));
+        setTracks(rehydrated);
+        tracksRef.current = rehydrated;
         setProjectLength(data.projectLength || 64);
+        setInitialized(true);
       }
     };
     loadSession();
@@ -58,9 +100,11 @@ function App() {
         tracks: tracks.map(t => ({
           id: t.id,
           name: t.name,
+          type: t.synth ? 'synth' : 'audio',
           sequence: t.sequence,
           regions: t.regions,
-          gain: t.gainNode?.gain.value
+          gain: t.gainNode?.gain.value,
+          blob: t.player?.rawBlob // We need to store the raw blob
         })),
         projectLength
       });
