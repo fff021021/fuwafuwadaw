@@ -359,20 +359,30 @@ function App() {
       recorder.start();
       setIsRecording(true);
     } else {
-      const { url } = await recorder.stop();
+      const { url, blob } = await recorder.stop();
       setIsRecording(false);
-      // Create a new audio track with the recorded URL
+      
       const gain = engine.ctx.createGain();
       gain.connect(engine.masterGain);
+      
+      const trackPlayer = new AudioTrackPlayer(engine.ctx, gain);
+      await trackPlayer.loadBlob(blob);
+
+      const secondsPerStep = (60 / bpm) / 4;
+      const neededSteps = Math.ceil(trackPlayer.buffer.duration / secondsPerStep);
+      if (neededSteps > projectLength) {
+        setProjectLength(neededSteps);
+      }
+
       setTracks([...tracks, {
         id: Date.now(),
         name: 'Recorded Audio',
-        url: url,
+        type: 'audio',
+        player: trackPlayer,
         gainNode: gain,
         plugins: [],
-        muted: false,
-        solo: false,
-        sequence: [], // Audio tracks don't use sequence for now
+        regions: [],
+        sequence: [],
         setVolume: (v) => gain.gain.setTargetAtTime(v, engine.ctx.currentTime, 0.02)
       }]);
     }
@@ -450,8 +460,14 @@ function App() {
               ))}
             </div>
             
-            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', backgroundColor: '#050505' }}>
-              <div className="timeline-main" style={{ position: 'relative', width: 'fit-content', minWidth: '100%', paddingLeft: '60px' }}>
+            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', backgroundColor: '#050505', flex: 1 }}>
+              <div className="timeline-main" style={{ 
+                position: 'relative', 
+                width: `${Math.max(projectLength * 40 * zoom, (activeTrack?.player?.buffer?.duration / ((60/bpm)/4)) * 40 * zoom || 0)}px`, 
+                minWidth: '100%', 
+                paddingLeft: '60px',
+                height: '500px' // Ensure enough height
+              }}>
                 <div className="timeline-sidebar-spacer" style={{ 
                   width: '60px', 
                   height: '100%', 
@@ -461,7 +477,7 @@ function App() {
                   background: '#111', 
                   zIndex: 200, 
                   borderRight: '1px solid #333',
-                  pointerEvents: 'none' // Let clicks pass through if needed
+                  pointerEvents: 'none'
                 }}>
                   {activeTrack?.player && <div style={{ fontSize: '9px', padding: '10px 4px', color: '#888' }}>AUDIO</div>}
                 </div>
