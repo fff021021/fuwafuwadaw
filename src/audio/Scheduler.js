@@ -15,19 +15,23 @@ class Scheduler {
     this.tracks = [];
   }
 
-  start(ctx, tracks, onStep) {
+  start(ctx, tracks, onStep, initialStep = 0) {
     if (this.isPlaying) return;
     this.isPlaying = true;
     this.tracks = tracks;
     this.onStepChange = onStep;
+    this.currentStep = initialStep;
     this.nextNoteTime = ctx.currentTime;
     this.scheduler(ctx);
+  }
+
+  seek(step) {
+    this.currentStep = step;
   }
 
   stop() {
     this.isPlaying = false;
     clearTimeout(this.timerID);
-    this.currentStep = 0;
   }
 
   scheduler(ctx) {

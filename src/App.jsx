@@ -21,14 +21,21 @@ import recorder from './audio/Recorder';
 import AudioTrackPlayer from './audio/AudioTrack';
 import exporter from './audio/Exporter';
 import WaveformView from './components/WaveformView';
+import Playhead from './components/Playhead';
+import persistence from './audio/Persistence';
 
 function App() {
   const [initialized, setInitialized] = useState(false);
   const [tracks, setTracks] = useState([]);
   const [activeTrackId, setActiveTrackId] = useState(1);
   const [currentStep, setCurrentStep] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const tracksRef = useRef([]); // Use ref for MIDI/Scheduler to avoid closure issues
+  const [zoom, setZoom] = useState(1.0);
+  const [projectLength, setProjectLength] = useState(64);
+  const [seekPos, setSeekPos] = useState(0);
+  
+  const tracksRef = useRef([]);
   const voicesRef = useRef({}); // To track MIDI voices
 
   const handleInit = async () => {
@@ -131,22 +138,30 @@ function App() {
   };
 
   const togglePlayback = (playing) => {
+    setIsPlaying(playing);
     if (playing) {
       scheduler.start(engine.ctx, tracks, (step, time) => {
         setCurrentStep(step);
-        // At step 0, trigger audio tracks for sync
         if (step === 0) {
           tracksRef.current.forEach(track => {
             if (track.player) track.player.play(time, 0, track.regions || []);
           });
         }
-      });
+      }, seekPos);
     } else {
       scheduler.stop();
-      setCurrentStep(-1);
-      tracks.forEach(t => {
-        if (t.player) t.player.stop();
+      tracksRef.current.forEach(track => {
+        if (track.player) track.player.stop();
       });
+    }
+  };
+
+  const handleSeek = (step) => {
+    setSeekPos(step);
+    setCurrentStep(step);
+    if (isPlaying) {
+      togglePlayback(false);
+      setTimeout(() => togglePlayback(true), 50);
     }
   };
 
@@ -296,13 +311,27 @@ function App() {
               ))}
             </div>
             
-            <div className="timeline-container">
+            <div className="timeline-toolbar glass">
+              <label>ZOOM <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} /></label>
+              <label>LENGTH <input type="number" value={projectLength / 16} onChange={(e) => setProjectLength(parseInt(e.target.value) * 16)} /> bars</label>
+            </div>
+            
+            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto' }}>
+              <Playhead 
+                currentStep={currentStep >= 0 ? currentStep : seekPos} 
+                projectLength={projectLength} 
+                zoom={zoom} 
+                onSeek={handleSeek} 
+              />
               {activeTrack?.player ? (
                 <WaveformView 
                   buffer={activeTrack.player.buffer} 
                   regions={activeTrack.regions || []} 
+                  zoom={zoom}
                   onUpdateRegions={(regs) => {
-                    setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, regions: regs } : t));
+                    const next = tracks.map(t => t.id === activeTrackId ? { ...t, regions: regs } : t);
+                    setTracks(next);
+                    tracksRef.current = next;
                   }}
                 />
               ) : (
@@ -311,6 +340,8 @@ function App() {
                   sequence={activeTrack?.sequence || []} 
                   setSequence={setTrackSequence}
                   currentStep={currentStep}
+                  zoom={zoom}
+                  steps={projectLength}
                 />
               )}
             </div>
