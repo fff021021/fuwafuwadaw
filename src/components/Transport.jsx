@@ -55,19 +55,19 @@ const Transport = ({ onTogglePlay }) => {
           justify-content: center;
         }
 
-        .bpm-control {
+        .transport-group {
           display: flex;
           align-items: center;
           gap: 8px;
         }
 
-        .bpm-control label {
+        .transport-group label {
           font-size: 10px;
           font-weight: 800;
           color: var(--text-muted);
         }
 
-        .bpm-control input {
+        .transport-group input {
           background: var(--bg-tertiary);
           border: 1px solid var(--glass-border);
           color: var(--accent-primary);
@@ -77,6 +77,11 @@ const Transport = ({ onTogglePlay }) => {
           font-family: 'JetBrains Mono', monospace;
           font-weight: 700;
           text-align: center;
+        }
+
+        .transport-group input[type="range"] {
+          width: 80px;
+          cursor: pointer;
         }
 
         .time-display {

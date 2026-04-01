@@ -315,7 +315,13 @@ function App() {
         <>
           <header className="glass">
             <div className="logo">FUWA DAW</div>
-            <Transport onTogglePlay={togglePlayback} />
+            <Transport 
+              onTogglePlay={togglePlayback} 
+              zoom={zoom} 
+              setZoom={setZoom} 
+              projectLength={projectLength} 
+              setProjectLength={setProjectLength} 
+            />
             <div className="header-right">
               <button 
                 className={`small-btn ${isRecording ? 'active recording' : ''}`} 
@@ -345,11 +351,6 @@ function App() {
                   <button className="small-btn" onClick={(e) => { e.stopPropagation(); playTestSound(track.id); }}>TEST</button>
                 </div>
               ))}
-            </div>
-            
-            <div className="timeline-toolbar glass">
-              <label>ZOOM <input type="range" min="0.5" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} /></label>
-              <label>LENGTH <input type="number" value={projectLength / 16} onChange={(e) => setProjectLength(parseInt(e.target.value) * 16)} /> bars</label>
             </div>
             
             <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto' }}>
