@@ -172,11 +172,23 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
     }
   };
 
+  const resetToFull = () => {
+    if (!buffer) return;
+    onUpdateRegions([{
+      id: Date.now(),
+      start: 0,
+      duration: buffer.duration,
+      pitchOffset: 0,
+      timeStretch: 1.0
+    }]);
+  };
+
   return (
     <div className="waveform-outer">
       <div className="waveform-header">
-        AUDIO EDITOR: {regions.length} blobs detected
-        <span>SHIFT + クリックで分割 / ドラッグで補正</span>
+        AUDIO EDITOR: {regions.length} blobs
+        <button className="small-btn" style={{ marginLeft: '10px' }} onClick={resetToFull}>全体を一括補正 (全選択)</button>
+        <span>SHIFT+クリックで分割 / ドラッグで補正</span>
       </div>
       <div className="waveform-container glass">
         <canvas 

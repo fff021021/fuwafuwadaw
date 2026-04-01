@@ -104,7 +104,11 @@ function App() {
           sequence: t.sequence,
           regions: t.regions,
           gain: t.gainNode?.gain.value,
-          blob: t.player?.rawBlob // We need to store the raw blob
+          blob: t.player?.rawBlob,
+          pluginStates: t.plugins.map(p => ({
+            name: p.name,
+            params: p.params || {}
+          }))
         })),
         projectLength
       });

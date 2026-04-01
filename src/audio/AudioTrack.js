@@ -8,10 +8,18 @@ class AudioTrackPlayer {
     this.destination = destination;
     this.buffer = null;
     this.activeSources = [];
+    this.rawBlob = null;
   }
 
   async loadFile(file) {
+    this.rawBlob = file;
     const arrayBuffer = await file.arrayBuffer();
+    this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
+  }
+
+  async loadBlob(blob) {
+    this.rawBlob = blob;
+    const arrayBuffer = await blob.arrayBuffer();
     this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
   }
 
