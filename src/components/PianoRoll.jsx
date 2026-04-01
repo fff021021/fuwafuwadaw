@@ -9,10 +9,10 @@ const NOTES = [
   { name: 'C', freq: 130.81 }
 ];
 
-const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep }) => {
+const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep, zoom = 1, steps = 64 }) => {
   if (!activeTrack) return <div className="piano-roll-empty">トラックを選択してください</div>;
 
-  const STEPS = 64; // 4 Measures
+  const cellWidth = 40 * zoom;
 
   const toggleNote = (noteIndex, stepIndex) => {
     const newSeq = [...sequence];
@@ -28,13 +28,13 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep }) => {
         duration: 0.25 
       });
       // Preview sound
-      activeTrack.synth.playNote(NOTES[noteIndex].freq, 0.5);
+      if (activeTrack.synth) activeTrack.synth.playNote(NOTES[noteIndex].freq, 0.5);
     }
     setSequence(newSeq);
   };
 
   return (
-    <div className="piano-roll">
+    <div className="piano-roll" style={{ "--cell-width": `${cellWidth}px` }}>
       <div className="piano-keys">
         {NOTES.map((note, i) => (
           <div key={i} className={`key ${note.name.includes('#') ? 'black' : 'white'}`}>
@@ -43,10 +43,10 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep }) => {
         ))}
       </div>
       
-      <div className="grid">
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${steps}, var(--cell-width))` }}>
         {NOTES.map((_, noteIdx) => (
           <div key={noteIdx} className="grid-row">
-            {[...Array(STEPS)].map((_, stepIdx) => {
+            {[...Array(steps)].map((_, stepIdx) => {
               const isActive = (sequence[stepIdx] || []).some(n => n.freq === NOTES[noteIdx].freq);
               const isCurrent = currentStep === stepIdx;
               
@@ -54,6 +54,7 @@ const PianoRoll = ({ activeTrack, sequence, setSequence, currentStep }) => {
                 <div 
                   key={stepIdx} 
                   className={`cell ${isActive ? 'active' : ''} ${isCurrent ? 'playing' : ''}`}
+                  style={{ width: 'var(--cell-width)', minWidth: 'var(--cell-width)' }}
                   onClick={() => toggleNote(noteIdx, stepIdx)}
                 />
               );

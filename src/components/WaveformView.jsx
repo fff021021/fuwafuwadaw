@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 
-const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
+const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => {
   const canvasRef = useRef(null);
+  const canvasWidth = (buffer ? buffer.duration * 10 * 16 * zoom : 1000); // Scale with zoom
 
   // Auto-generate regions if empty (Initial segmentation)
   useEffect(() => {
@@ -59,7 +60,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
 
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.beginPath();
-    for (let i = 0; i < width; i += width / 16) { // 16 grid lines
+    for (let i = 0; i < width; i += 40 * zoom) { // Grid lines per step
       ctx.moveTo(i, 0);
       ctx.lineTo(i, height);
     }
@@ -72,8 +73,9 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
     for (let i = 0; i < width; i++) {
       let min = 1.0;
       let max = -1.0;
+      const startIdx = Math.floor(i * step);
       for (let j = 0; j < step; j++) {
-        const datum = data[i * step + j];
+        const datum = data[startIdx + j] || 0;
         if (datum < min) min = datum;
         if (datum > max) max = datum;
       }
@@ -86,7 +88,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
     regions.forEach(region => {
       const x = (region.start / buffer.duration) * width;
       const w = (region.duration / buffer.duration) * width;
-      const y = amp - (region.pitchOffset * 5); // 5px per semitone
+      const y = amp - (region.pitchOffset * 5);
       
       ctx.fillStyle = 'rgba(255, 171, 0, 0.6)';
       ctx.strokeStyle = '#ffab00';
@@ -101,7 +103,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
       ctx.fillText(`${region.pitchOffset > 0 ? '+' : ''}${region.pitchOffset}`, x + 5, y + 4);
     });
 
-  }, [buffer, regions]);
+  }, [buffer, regions, zoom, canvasWidth]);
 
   const handleMouseDown = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -149,13 +151,13 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
     <div className="waveform-outer">
       <div className="waveform-header">
         AUDIO EDITOR: {regions.length} blobs detected
-        <span>ドラッグでピッチ・タイミング補正 / SHIFTクリックでリセット (Coming soon)</span>
+        <span>ドラッグでピッチ・タイミング補正</span>
       </div>
       <div className="waveform-container glass">
         <canvas 
           ref={canvasRef} 
-          width={1000} 
-          height={300} 
+          width={canvasWidth} 
+          height={200} 
           onMouseDown={handleMouseDown}
         />
       </div>

@@ -30,26 +30,26 @@
 }
 
 .key.white { background: #eee; color: #333; }
-.key.black { background: #222; color: #fff; height: 24px; margin-top: -12px; margin-bottom: -12px; z-index: 2; position: relative; width: 40px;}
+.key.black { background: #222; color: #fff; height: 24px; margin-top: -12px; margin-bottom: -12px; z-index: 2; position: relative; }
 
 .grid {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .grid-row {
   display: flex;
-  height: 30px;
+  height: 25px;
 }
 
 .cell {
-  min-width: 40px;
-  height: 100%;
-  border-right: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
+  width: var(--cell-width, 40px);
+  height: 25px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
+  transition: background 0.1s;
   background: rgba(255,255,255,0.01);
 }
 

@@ -38,7 +38,31 @@ function App() {
   const tracksRef = useRef([]);
   const voicesRef = useRef({}); // To track MIDI voices
 
-  const handleInit = async () => {
+  useEffect(() => {
+    const loadSession = async () => {
+      const data = await persistence.loadProject();
+      if (data) {
+        setTracks(data.tracks);
+        setProjectLength(data.projectLength || 64);
+      }
+    };
+    loadSession();
+  }, []);
+
+  useEffect(() => {
+    if (initialized && tracks.length > 0) {
+      persistence.saveProject({
+        tracks: tracks.map(t => ({
+          id: t.id,
+          name: t.name,
+          sequence: t.sequence,
+          regions: t.regions,
+          gain: t.gainNode?.gain.value
+        })),
+        projectLength
+      });
+    }
+  }, [tracks, projectLength, initialized]);
     await engine.init();
     
     // Setup MIDI
