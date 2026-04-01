@@ -57,6 +57,14 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
     ctx.lineTo(width, amp);
     ctx.stroke();
 
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath();
+    for (let i = 0; i < width; i += width / 16) { // 16 grid lines
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, height);
+    }
+    ctx.stroke();
+
     // Draw Waveform
     ctx.strokeStyle = '#00e5ff';
     ctx.lineWidth = 1;
@@ -74,18 +82,23 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
     }
     ctx.stroke();
 
-    // Draw Melodyne-style "Blobs" (Placeholder for manual segments)
+    // Draw Melodyne-style "Blobs"
     regions.forEach(region => {
       const x = (region.start / buffer.duration) * width;
       const w = (region.duration / buffer.duration) * width;
-      const y = amp - (region.pitchOffset * 10); // Simple pitch-to-Y mapping
+      const y = amp - (region.pitchOffset * 5); // 5px per semitone
       
       ctx.fillStyle = 'rgba(255, 171, 0, 0.6)';
       ctx.strokeStyle = '#ffab00';
       ctx.lineWidth = 2;
+      ctx.beginPath();
       ctx.roundRect(x, y - 10, w, 20, 10);
       ctx.fill();
       ctx.stroke();
+      
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px Arial';
+      ctx.fillText(`${region.pitchOffset > 0 ? '+' : ''}${region.pitchOffset}`, x + 5, y + 4);
     });
 
   }, [buffer, regions]);
@@ -100,16 +113,28 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
     const clickedRegion = regions.find(r => {
       const rx = (r.start / buffer.duration) * width;
       const rw = (r.duration / buffer.duration) * width;
-      const ry = amp - (r.pitchOffset * 10);
+      const ry = amp - (r.pitchOffset * 5);
       return x >= rx && x <= rx + rw && y >= ry - 15 && y <= ry + 15;
     });
 
     if (clickedRegion) {
+      const startX = e.clientX;
       const startY = e.clientY;
+      const initialStart = clickedRegion.start;
+      const initialPitch = clickedRegion.pitchOffset;
+
       const handleMouseMove = (moveEvent) => {
+        const deltaX = (moveEvent.clientX - startX) / width * buffer.duration;
         const deltaY = startY - moveEvent.clientY;
-        const newPitch = Math.round(deltaY / 5); // 5px per semitone
-        onUpdateRegions(regions.map(r => r.id === clickedRegion.id ? { ...r, pitchOffset: newPitch } : r));
+        
+        const newPitch = initialPitch + Math.round(deltaY / 10);
+        const newStart = Math.max(0, initialStart + deltaX);
+
+        onUpdateRegions(regions.map(r => 
+          r.id === clickedRegion.id 
+            ? { ...r, pitchOffset: newPitch, start: newStart } 
+            : r
+        ));
       };
       const handleMouseUp = () => {
         window.removeEventListener('mousemove', handleMouseMove);
@@ -121,14 +146,19 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
   };
 
   return (
-    <div className="waveform-container glass" style={{ height: '300px', width: '100%', overflow: 'hidden', cursor: 'ns-resize' }}>
-      <canvas 
-        ref={canvasRef} 
-        width={1000} 
-        height={300} 
-        style={{ width: '100%', height: '100%' }} 
-        onMouseDown={handleMouseDown}
-      />
+    <div className="waveform-outer">
+      <div className="waveform-header">
+        AUDIO EDITOR: {regions.length} blobs detected
+        <span>ドラッグでピッチ・タイミング補正 / SHIFTクリックでリセット (Coming soon)</span>
+      </div>
+      <div className="waveform-container glass">
+        <canvas 
+          ref={canvasRef} 
+          width={1000} 
+          height={300} 
+          onMouseDown={handleMouseDown}
+        />
+      </div>
     </div>
   );
 };

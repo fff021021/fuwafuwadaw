@@ -105,3 +105,38 @@ h1, h2, h3 {
 .control-btn.active {
   animation: neonPulse 2s infinite;
 }
+
+.waveform-outer {
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.waveform-header {
+  font-size: 10px;
+  color: var(--accent-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.waveform-header span {
+  color: var(--text-secondary);
+  font-size: 8px;
+}
+
+.waveform-container {
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.waveform-container canvas {
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}

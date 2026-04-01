@@ -11,19 +11,25 @@ class Exporter {
     // Reconstruct the signal chain in the offline context
     for (const track of tracks) {
       if (track.player && track.player.buffer) {
-        const source = offlineCtx.createBufferSource();
-        source.buffer = track.player.buffer;
-        
-        let lastNode = source;
-        // Connect plugins (simplified for export)
-        // In a real scenario, we'd need to recreate each plugin for the offlineCtx
-        // For now, we connect directly to the master gain for a basic mixdown
         const gain = offlineCtx.createGain();
         gain.gain.value = track.gainNode.gain.value;
-        
-        lastNode.connect(gain);
         gain.connect(offlineCtx.destination);
-        source.start(0);
+
+        const regions = track.regions || [];
+        if (regions.length === 0) {
+          const source = offlineCtx.createBufferSource();
+          source.buffer = track.player.buffer;
+          source.connect(gain);
+          source.start(0);
+        } else {
+          regions.forEach(r => {
+            const source = offlineCtx.createBufferSource();
+            source.buffer = track.player.buffer;
+            source.detune.value = r.pitchOffset * 100;
+            source.connect(gain);
+            source.start(r.start, r.start, r.duration);
+          });
+        }
       }
     }
 
