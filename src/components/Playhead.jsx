@@ -1,22 +1,31 @@
 import React from 'react';
 
-const Playhead = ({ currentStep, projectLength, zoom, onSeek }) => {
+const Playhead = ({ currentStep, projectLength, zoom = 1, onSeek, style }) => {
   const PIXELS_PER_STEP = 40;
-  const width = projectLength * PIXELS_PER_STEP * zoom; 
+  const width = projectLength * PIXELS_PER_STEP * zoom;
   const position = (currentStep / projectLength) * width;
 
-  const handleClick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+  const handleMouseDown = (e) => {
+    const rect = e.currentTarget.parentElement.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const newStep = Math.floor(x / (PIXELS_PER_STEP * zoom));
-    onSeek(Math.max(0, Math.min(projectLength - 1, newStep)));
+    const step = Math.floor((x / width) * projectLength);
+    if (onSeek) onSeek(Math.max(0, step));
   };
 
   return (
     <div 
-      className="playhead-overlay" 
-      style={{ width: `${width}px`, position: 'absolute', height: '100%', top: 0, left: 0, cursor: 'pointer' }}
-      onClick={handleClick}
+      className="playhead" 
+      onClick={handleMouseDown}
+      style={{ 
+        ...style,
+        position: 'absolute', 
+        left: 0, 
+        top: 0, 
+        width: `${width}px`, 
+        height: '100%', 
+        cursor: 'pointer',
+        zIndex: 100
+      }}
     >
       <div 
         className="playhead-bar" 

@@ -450,15 +450,17 @@ function App() {
               ))}
             </div>
             
-            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', display: 'flex' }}>
-              <div className="timeline-sidebar-spacer" style={{ width: '60px', minWidth: '60px', height: '100%', position: 'sticky', left: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10, borderRight: '2px solid #000' }}></div>
-              <div className="timeline-main" style={{ position: 'relative', flex: 1, minWidth: 'fit-content' }}>
-                {/* Playhead is absolute and layered on top of Waveform/PianoRoll */}
+            <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', display: 'flex', height: '100%' }}>
+              <div className="timeline-sidebar-spacer" style={{ width: '60px', minWidth: '60px', position: 'sticky', left: 0, background: 'rgba(20,22,30,0.95)', zIndex: 110, borderRight: '2px solid #000' }}>
+                {/* Optional: Add labels or axis here */}
+              </div>
+              <div className="timeline-main" style={{ position: 'relative', flex: '0 0 auto', minWidth: 'fit-content' }}>
                 <Playhead 
                   currentStep={currentStep >= 0 ? currentStep : seekPos} 
                   projectLength={projectLength} 
                   zoom={zoom} 
                   onSeek={handleSeek} 
+                  style={{ zIndex: 120 }}
                 />
                 {activeTrack?.player ? (
                   <WaveformView 
