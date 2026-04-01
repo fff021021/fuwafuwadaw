@@ -196,19 +196,20 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0, bpm =
   };
 
   return (
-    <div className="waveform-outer">
-      <div className="waveform-header">
+    <div className="waveform-outer" style={{ position: 'relative' }}>
+      <div className="waveform-header" style={{ position: 'absolute', top: '-30px', left: 0, zIndex: 5 }}>
         AUDIO EDITOR: {regions.length} blobs
         <button className="small-btn" style={{ marginLeft: '10px' }} onClick={resetToFull}>全体を一括 (全選択)</button>
         <button className="small-btn" style={{ marginLeft: '5px' }} onClick={autoSegment}>自動解析 (アタック検出)</button>
-        <span>SHIFT+クリックで分割 / ドラッグで補正</span>
+        <span style={{ fontSize: '10px', marginLeft: '10px', color: '#888' }}>SHIFT+クリックで分割 / ドラッグで補正</span>
       </div>
-      <div className="waveform-container glass">
+      <div className="waveform-container" style={{ margin: 0, padding: 0 }}>
         <canvas 
           ref={canvasRef} 
           width={canvasWidth} 
-          height={200} 
+          height={250} 
           onMouseDown={handleMouseDown}
+          style={{ display: 'block' }}
         />
       </div>
     </div>

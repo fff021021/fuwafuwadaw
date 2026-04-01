@@ -17,14 +17,14 @@ const Playhead = ({ currentStep, projectLength, zoom = 1, onSeek, style }) => {
       className="playhead" 
       onClick={handleMouseDown}
       style={{ 
-        ...style,
         position: 'absolute', 
         left: 0, 
         top: 0, 
         width: `${width}px`, 
         height: '100%', 
         cursor: 'pointer',
-        zIndex: 100
+        zIndex: 50,
+        pointerEvents: 'auto'
       }}
     >
       <div 
