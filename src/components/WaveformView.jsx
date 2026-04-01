@@ -143,7 +143,30 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
     });
 
     if (clickedRegion) {
-      // ... (Drag logic remains same)
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const initialStart = clickedRegion.start;
+      const initialPitch = clickedRegion.pitchOffset;
+
+      const handleMouseMove = (moveEvent) => {
+        const deltaX = (moveEvent.clientX - startX) / width * buffer.duration;
+        const deltaY = startY - moveEvent.clientY;
+        
+        const newPitch = initialPitch + Math.round(deltaY / 10);
+        const newStart = Math.max(0, initialStart + deltaX);
+
+        onUpdateRegions(regions.map(r => 
+          r.id === clickedRegion.id 
+            ? { ...r, pitchOffset: newPitch, start: newStart } 
+            : r
+        ));
+      };
+      const handleMouseUp = () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
     }
   };
 
