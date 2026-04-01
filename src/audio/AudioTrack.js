@@ -24,6 +24,12 @@ class AudioTrackPlayer {
     this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
   }
 
+  async loadBlob(blob) {
+    this.rawBlob = blob;
+    const arrayBuffer = await blob.arrayBuffer();
+    this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
+  }
+
   play(time = 0, offset = 0, regions = [], bpm = 120) {
     if (!this.buffer) return;
     this.stop();

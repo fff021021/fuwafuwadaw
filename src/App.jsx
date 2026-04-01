@@ -456,7 +456,7 @@ function App() {
                 {activeTrack?.player && <div style={{ fontSize: '9px', padding: '4px', color: '#888' }}>AUDIO</div>}
               </div>
 
-              <div className="timeline-main" style={{ position: 'relative', flex: '0 0 auto' }}>
+              <div className="timeline-main" style={{ position: 'relative', flex: '0 0 auto', width: 'fit-content', minWidth: '100%' }}>
                 <Playhead 
                   currentStep={currentStep >= 0 ? currentStep : seekPos} 
                   projectLength={projectLength} 
