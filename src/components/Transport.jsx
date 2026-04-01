@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import engine from '../audio/Engine';
 import '../styles/Transport.css';
 
-const Transport = ({ onTogglePlay }) => {
+const Transport = ({ onTogglePlay, zoom, setZoom, projectLength, setProjectLength, bpm, onBpmChange }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(120);
 
   const togglePlay = () => {
     const newState = !isPlaying;
@@ -14,7 +13,7 @@ const Transport = ({ onTogglePlay }) => {
 
   const handleBpmChange = (e) => {
     const value = Math.max(20, Math.min(300, parseInt(e.target.value) || 0));
-    setBpm(value);
+    if (onBpmChange) onBpmChange(value);
   };
 
   return (

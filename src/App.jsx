@@ -37,6 +37,7 @@ function App() {
   const [projectLength, setProjectLength] = useState(64);
   const [seekPos, setSeekPos] = useState(0);
   const [openPlugins, setOpenPlugins] = useState([]); // List of plugin objects
+  const [bpm, setBpm] = useState(120);
   
   const tracksRef = useRef([]);
   const voicesRef = useRef({}); // To track MIDI voices
@@ -259,9 +260,22 @@ function App() {
   const togglePlayback = (playing) => {
     setIsPlaying(playing);
     if (playing) {
+      scheduler.bpm = bpm;
+      const secondsPerStep = (60 / bpm) / 4;
+      const initialOffset = seekPos * secondsPerStep;
+
       scheduler.start(engine.ctx, tracks, (step, time) => {
         setCurrentStep(step);
-        if (step === 0) {
+        
+        // Initial start of audio tracks from seek position
+        if (step === seekPos) {
+          tracksRef.current.forEach(track => {
+            if (track.player) track.player.play(time, initialOffset, track.regions || []);
+          });
+        }
+        
+        // Loop reset playback
+        if (step === 0 && seekPos !== 0) {
           tracksRef.current.forEach(track => {
             if (track.player) track.player.play(time, 0, track.regions || []);
           });
@@ -416,6 +430,8 @@ function App() {
               setZoom={setZoom} 
               projectLength={projectLength} 
               setProjectLength={setProjectLength} 
+              bpm={bpm}
+              onBpmChange={setBpm}
             />
             <div className="header-right">
               <button 
