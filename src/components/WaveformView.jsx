@@ -114,8 +114,9 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
     const amp = rect.height / 2;
     const clickTime = (x / width) * buffer.duration;
 
-    // Split logic if Alt key is pressed
-    if (e.altKey) {
+    // Split logic if Shift key is pressed
+    if (e.shiftKey) {
+      console.log('Split attempt at:', clickTime);
       const targetIndex = regions.findIndex(r => 
         clickTime >= r.start && clickTime <= r.start + r.duration
       );
@@ -131,6 +132,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
         const nextRegions = [...regions];
         nextRegions.splice(targetIndex, 1, r1, r2);
         onUpdateRegions(nextRegions);
+        console.log('Split successful. New count:', nextRegions.length);
         return;
       }
     }
@@ -174,7 +176,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
     <div className="waveform-outer">
       <div className="waveform-header">
         AUDIO EDITOR: {regions.length} blobs detected
-        <span>ALT + クリックで分割 / ドラッグで補正</span>
+        <span>SHIFT + クリックで分割 / ドラッグで補正</span>
       </div>
       <div className="waveform-container glass">
         <canvas 
