@@ -87,8 +87,9 @@ main {
   background-size: 40px 40px; /* Grid */
   display: flex;
   justify-content: flex-start;
-  align-items: stretch; /* Correct way to fill height */
-  overflow: auto; /* Ensure scrollbars are here */
+  align-items: stretch;
+  overflow-x: scroll; /* Force horizontal scrollbar visibility */
+  overflow-y: hidden; /* Avoid confusion with vertical scrolling */
 }
 
 footer {

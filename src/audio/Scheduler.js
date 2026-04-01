@@ -14,17 +14,29 @@ class Scheduler {
     this.onStepChange = null; // Callback for UI
     this.tracks = [];
     this.maxSteps = 64;
+    this.startTime = 0;
+    this.initialStep = 0;
   }
 
-  start(ctx, tracks, onStep, maxSteps = 64, initialStep = 0) {
+  start(ctx, tracks, onStep, maxSteps = 100, initialStep = 0) {
     if (this.isPlaying) return;
     this.isPlaying = true;
     this.tracks = tracks;
     this.onStepChange = onStep;
     this.maxSteps = maxSteps;
     this.currentStep = initialStep;
+    this.initialStep = initialStep;
+    this.startTime = ctx.currentTime;
     this.nextNoteTime = ctx.currentTime;
     this.scheduler(ctx);
+  }
+
+  getExactStep(currentTime) {
+    if (!this.isPlaying) return this.currentStep;
+    const secondsPerStep = (60.0 / this.bpm) / 4;
+    const elapsed = currentTime - this.startTime;
+    const stepsElapsed = elapsed / secondsPerStep;
+    return (this.initialStep + stepsElapsed) % this.maxSteps;
   }
 
   updateTracks(tracks) {

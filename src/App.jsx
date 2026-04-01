@@ -207,10 +207,24 @@ function App() {
       }));
       setTracks(rehydrated);
       tracksRef.current = rehydrated;
-      setProjectLength(parseInt(data.projectLength) || 64);
+      setProjectLength(parseInt(data.projectLength) || 100);
     }
     setTimeout(() => { isRehydrating.current = false; }, 500);
   };
+
+  // rAF Ticker for smoother, more precise playhead sync
+  useEffect(() => {
+    let animId;
+    const tick = () => {
+      if (isPlaying) {
+        const exactStep = scheduler.getExactStep(engine.ctx.currentTime);
+        setCurrentStep(exactStep);
+        animId = requestAnimationFrame(tick);
+      }
+    };
+    if (isPlaying) animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [isPlaying, bpm]);
 
   const setTrackSequence = (newSeq) => {
     const nextTracks = tracks.map(t => t.id === activeTrackId ? { ...t, sequence: newSeq } : t);
@@ -228,7 +242,7 @@ function App() {
   };
 
   const togglePlayback = (playing) => {
-    const steps = parseInt(projectLength) || 64;
+    const steps = parseInt(projectLength) || 100;
     setIsPlaying(playing);
     if (playing) {
       scheduler.bpm = bpm;
@@ -236,9 +250,7 @@ function App() {
       const initialOffset = seekPos * secondsPerStep;
 
       scheduler.start(engine.ctx, tracks, (step, time) => {
-        console.log('Playback Step:', step, 'MaxSteps:', steps, 'BPM:', bpm);
-        setCurrentStep(step);
-        
+        // Audio triggering (scheduler handles look-ahead)
         if (step === seekPos) {
           tracksRef.current.forEach(track => {
             if (track.player) track.player.play(time, initialOffset, track.regions || []);
@@ -253,6 +265,7 @@ function App() {
       }, steps, seekPos);
     } else {
       scheduler.stop();
+      setCurrentStep(seekPos);
       tracksRef.current.forEach(track => {
         if (track.player) track.player.stop();
       });
