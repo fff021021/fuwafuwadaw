@@ -64,7 +64,7 @@ function App() {
         projectLength
       });
     }
-  }, [tracks, projectLength, initialized]);
+  const handleInit = async () => {
     await engine.init();
     
     // Setup MIDI
