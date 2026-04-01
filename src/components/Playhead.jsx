@@ -2,14 +2,13 @@ import React from 'react';
 
 const Playhead = ({ currentStep, projectLength, zoom = 1, onSeek, style }) => {
   const PIXELS_PER_STEP = 40;
-  const width = projectLength * PIXELS_PER_STEP * zoom;
-  const position = (currentStep / projectLength) * width;
+  const position = currentStep * PIXELS_PER_STEP * zoom;
 
   const handleMouseDown = (e) => {
-    const rect = e.currentTarget.parentElement.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const step = Math.floor((x / width) * projectLength);
-    if (onSeek) onSeek(Math.max(0, step));
+    const step = Math.max(0, Math.floor(x / (PIXELS_PER_STEP * zoom)));
+    if (onSeek) onSeek(step);
   };
 
   return (

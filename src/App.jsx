@@ -34,7 +34,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [zoom, setZoom] = useState(1.0);
-  const [projectLength, setProjectLength] = useState(64);
+  const [projectLength, setProjectLength] = useState(100);
   const [seekPos, setSeekPos] = useState(0);
   const [openPlugins, setOpenPlugins] = useState([]); // List of plugin objects
   const [bpm, setBpm] = useState(120);
@@ -465,7 +465,7 @@ function App() {
                 position: 'relative', 
                 width: `${Math.max(projectLength * 40 * zoom, (activeTrack?.player?.buffer?.duration / ((60/bpm)/4)) * 40 * zoom || 0) + 60}px`, 
                 minWidth: '100%', 
-                height: '500px'
+                minHeight: '100%'
               }}>
                 <div className="timeline-sidebar-spacer" style={{ 
                   width: '60px', 
@@ -481,15 +481,15 @@ function App() {
                   {activeTrack?.player && <div style={{ fontSize: '9px', padding: '10px 4px', color: '#888' }}>AUDIO</div>}
                 </div>
 
-                <div className="timeline-content-wrapper" style={{ position: 'relative', marginLeft: '60px' }}>
+                <div className="timeline-content-wrapper" style={{ position: 'relative', marginLeft: '60px', height: '100%' }}>
                   <Playhead 
                     currentStep={currentStep >= 0 ? currentStep : seekPos} 
                     projectLength={projectLength} 
                     zoom={zoom} 
                     onSeek={handleSeek}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', height: '100%' }}
                   />
-                  <div className="timeline-content-layer">
+                  <div className="timeline-content-layer" style={{ padding: '20px 0' }}>
                     {activeTrack?.player ? (
                       <WaveformView 
                         buffer={activeTrack.player.buffer} 
