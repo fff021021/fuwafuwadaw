@@ -113,6 +113,12 @@ function App() {
     setInitialized(true);
   };
 
+  const setTrackSequence = (newSeq) => {
+    const nextTracks = tracks.map(t => t.id === activeTrackId ? { ...t, sequence: newSeq } : t);
+    setTracks(nextTracks);
+    tracksRef.current = nextTracks;
+  };
+
   const playTestSound = (trackId) => {
     const track = tracks.find(t => t.id === trackId);
     if (track && track.synth) {
