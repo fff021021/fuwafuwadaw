@@ -7,7 +7,7 @@ class AudioTrackPlayer {
     this.ctx = ctx;
     this.destination = destination;
     this.buffer = null;
-    this.source = null;
+    this.activeSources = [];
   }
 
   async loadFile(file) {
@@ -20,22 +20,45 @@ class AudioTrackPlayer {
     this.buffer = await this.ctx.decodeAudioData(arrayBuffer);
   }
 
-  play(time = 0, offset = 0) {
+  play(time = 0, offset = 0, regions = []) {
     if (!this.buffer) return;
     this.stop();
-    this.source = this.ctx.createBufferSource();
-    this.source.buffer = this.buffer;
-    this.source.connect(this.destination);
-    this.source.start(time, offset);
+
+    if (regions.length === 0) {
+      const source = this.ctx.createBufferSource();
+      source.buffer = this.buffer;
+      source.connect(this.destination);
+      source.start(time, offset);
+      this.activeSources.push(source);
+    } else {
+      regions.forEach(r => {
+        const rEnd = r.start + r.duration;
+        if (rEnd > offset) {
+          const source = this.ctx.createBufferSource();
+          source.buffer = this.buffer;
+          source.detune.value = r.pitchOffset * 100;
+          source.connect(this.destination);
+          
+          const startDelay = Math.max(0, r.start - offset);
+          const playOffset = Math.max(r.start, offset);
+          const playDuration = r.duration - (playOffset - r.start);
+          
+          if (playDuration > 0) {
+            source.start(time + startDelay, playOffset, playDuration);
+            this.activeSources.push(source);
+          }
+        }
+      });
+    }
   }
 
   stop() {
-    if (this.source) {
+    this.activeSources.forEach(s => {
       try {
-        this.source.stop();
+        s.stop();
       } catch (e) {}
-      this.source = null;
-    }
+    });
+    this.activeSources = [];
   }
 }
 

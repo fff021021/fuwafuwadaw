@@ -137,8 +137,8 @@ function App() {
         setCurrentStep(step);
         // At step 0, trigger audio tracks for sync
         if (step === 0) {
-          tracks.forEach(t => {
-            if (t.player) t.player.play(time);
+          tracksRef.current.forEach(track => {
+            if (track.player) track.player.play(time, 0, track.regions || []);
           });
         }
       });
@@ -302,6 +302,9 @@ function App() {
                 <WaveformView 
                   buffer={activeTrack.player.buffer} 
                   regions={activeTrack.regions || []} 
+                  onUpdateRegions={(regs) => {
+                    setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, regions: regs } : t));
+                  }}
                 />
               ) : (
                 <PianoRoll 

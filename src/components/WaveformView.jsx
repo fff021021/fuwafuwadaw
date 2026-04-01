@@ -1,7 +1,40 @@
 import React, { useEffect, useRef } from 'react';
 
-const WaveformView = ({ buffer, regions = [], onUpdateRegion }) => {
+const WaveformView = ({ buffer, regions = [], onUpdateRegions }) => {
   const canvasRef = useRef(null);
+
+  // Auto-generate regions if empty (Initial segmentation)
+  useEffect(() => {
+    if (buffer && regions.length === 0) {
+      const data = buffer.getChannelData(0);
+      const newRegions = [];
+      const threshold = 0.1;
+      let inRegion = false;
+      let start = 0;
+
+      // Simple onset detection
+      for (let i = 0; i < data.length; i += 1000) {
+        const amp = Math.abs(data[i]);
+        if (!inRegion && amp > threshold) {
+          inRegion = true;
+          start = i / buffer.sampleRate;
+        } else if (inRegion && amp < threshold / 2) {
+          inRegion = false;
+          const end = i / buffer.sampleRate;
+          if (end - start > 0.1) {
+            newRegions.push({
+              id: Date.now() + i,
+              start,
+              duration: end - start,
+              pitchOffset: 0,
+              timeStretch: 1.0
+            });
+          }
+        }
+      }
+      if (newRegions.length > 0) onUpdateRegions(newRegions);
+    }
+  }, [buffer]);
 
   useEffect(() => {
     if (!buffer || !canvasRef.current) return;
@@ -57,9 +90,45 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegion }) => {
 
   }, [buffer, regions]);
 
+  const handleMouseDown = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const width = rect.width;
+    const amp = rect.height / 2;
+
+    const clickedRegion = regions.find(r => {
+      const rx = (r.start / buffer.duration) * width;
+      const rw = (r.duration / buffer.duration) * width;
+      const ry = amp - (r.pitchOffset * 10);
+      return x >= rx && x <= rx + rw && y >= ry - 15 && y <= ry + 15;
+    });
+
+    if (clickedRegion) {
+      const startY = e.clientY;
+      const handleMouseMove = (moveEvent) => {
+        const deltaY = startY - moveEvent.clientY;
+        const newPitch = Math.round(deltaY / 5); // 5px per semitone
+        onUpdateRegions(regions.map(r => r.id === clickedRegion.id ? { ...r, pitchOffset: newPitch } : r));
+      };
+      const handleMouseUp = () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+  };
+
   return (
-    <div className="waveform-container glass" style={{ height: '300px', width: '100%', overflow: 'hidden' }}>
-      <canvas ref={canvasRef} width={1000} height={300} style={{ width: '100%', height: '100%' }} />
+    <div className="waveform-container glass" style={{ height: '300px', width: '100%', overflow: 'hidden', cursor: 'ns-resize' }}>
+      <canvas 
+        ref={canvasRef} 
+        width={1000} 
+        height={300} 
+        style={{ width: '100%', height: '100%' }} 
+        onMouseDown={handleMouseDown}
+      />
     </div>
   );
 };
