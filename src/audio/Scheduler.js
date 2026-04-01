@@ -27,6 +27,14 @@ class Scheduler {
     this.scheduler(ctx);
   }
 
+  updateTracks(tracks) {
+    this.tracks = tracks;
+  }
+
+  updateMaxSteps(steps) {
+    this.maxSteps = steps;
+  }
+
   seek(step) {
     this.currentStep = step;
   }

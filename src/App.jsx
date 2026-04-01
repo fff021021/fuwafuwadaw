@@ -139,6 +139,7 @@ function App() {
 
   useEffect(() => {
     if (initialized && tracks.length > 0) {
+      if (isPlaying) scheduler.updateTracks(tracks);
       persistence.saveProject({
         tracks: tracks.map(t => ({
           id: t.id,
@@ -258,6 +259,7 @@ function App() {
   };
 
   const togglePlayback = (playing) => {
+    const steps = parseInt(projectLength) || 64;
     setIsPlaying(playing);
     if (playing) {
       scheduler.bpm = bpm;
@@ -265,7 +267,7 @@ function App() {
       const initialOffset = seekPos * secondsPerStep;
 
       scheduler.start(engine.ctx, tracks, (step, time) => {
-        console.log('Step:', step, 'Time:', time, 'Max:', projectLength);
+        console.log('Playback Step:', step, 'MaxSteps:', steps, 'BPM:', bpm);
         setCurrentStep(step);
         
         if (step === seekPos) {
@@ -279,7 +281,7 @@ function App() {
             if (track.player) track.player.play(time, 0, track.regions || []);
           });
         }
-      }, projectLength, seekPos);
+      }, steps, seekPos);
     } else {
       scheduler.stop();
       tracksRef.current.forEach(track => {
