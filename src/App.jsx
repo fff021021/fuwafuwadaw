@@ -55,24 +55,66 @@ function App() {
           let player = null;
           let plugins = [];
 
-          // Setup Generic Plugin Chain
-          const comp = new Compressor(engine.ctx);
-          const eq = new EQ(engine.ctx);
-          const pitch = new PitchShifter(engine.ctx);
-          const rev = new Reverb(engine.ctx);
-          const delay = new Delay(engine.ctx);
+          // Plugin Map for Reconstruction
+          const pluginClasses = {
+            'Compressor': Compressor,
+            'EQ': EQ,
+            'PitchShifter': PitchShifter,
+            'Reverb': Reverb,
+            'Delay': Delay,
+            'Gate': Gate,
+            'DeEsser': DeEsser
+          };
 
-          pitch.connect(eq.input);
-          eq.connect(comp.node);
-          comp.connect(delay.input);
-          delay.connect(rev.input);
-          rev.connect(gain);
-          plugins = [pitch, eq, comp, delay, rev];
+          // Reconstruct Plugins from state
+          if (t.pluginStates && t.pluginStates.length > 0) {
+            let lastNode = null;
+            t.pluginStates.forEach((ps, idx) => {
+              const PluginClass = pluginClasses[ps.name];
+              if (PluginClass) {
+                const p = new PluginClass(engine.ctx);
+                // Apply saved params
+                if (ps.params) {
+                  Object.keys(ps.params).forEach(key => {
+                    if (p[key] && typeof p[key].setTargetAtTime === 'function') {
+                      p[key].setTargetAtTime(ps.params[key], 0, 0);
+                    } else {
+                      p[key] = ps.params[key];
+                    }
+                  });
+                }
+                plugins.push(p);
+                
+                // Connection Chain
+                if (idx === 0) {
+                  // Connect to gain later
+                } else {
+                  const prev = plugins[idx - 1];
+                  // Connect prev output to current input
+                  const prevOutput = prev.output || prev.node;
+                  const currentInput = p.input || p.node;
+                  if (prevOutput && currentInput) prevOutput.connect(currentInput);
+                }
+              }
+            });
+
+            // Connect Chain to Gain
+            if (plugins.length > 0) {
+              const finalPlugin = plugins[plugins.length - 1];
+              const finalOutput = finalPlugin.output || finalPlugin.node;
+              if (finalOutput) finalOutput.connect(gain);
+            }
+          } else {
+            // Fallback to default gain connection if no plugins
+            // (Will be connected from synth/player below)
+          }
+
+          const firstInput = plugins.length > 0 ? (plugins[0].input || plugins[0].node) : gain;
 
           if (t.type === 'synth') {
-            synth = new Synth(engine.ctx, pitch.input);
+            synth = new Synth(engine.ctx, firstInput);
           } else if (t.blob) {
-            player = new AudioTrackPlayer(engine.ctx, pitch.input);
+            player = new AudioTrackPlayer(engine.ctx, firstInput);
             await player.loadBlob(t.blob);
           }
 

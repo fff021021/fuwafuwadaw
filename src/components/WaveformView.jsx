@@ -4,38 +4,48 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
   const canvasRef = useRef(null);
   const canvasWidth = (buffer ? buffer.duration * 10 * 16 * zoom : 1000); // Scale with zoom
 
-  // Auto-generate regions if empty (Initial segmentation)
+  // Default to one full region if empty
   useEffect(() => {
     if (buffer && regions.length === 0) {
-      const data = buffer.getChannelData(0);
-      const newRegions = [];
-      const threshold = 0.1;
-      let inRegion = false;
-      let start = 0;
-
-      // Simple onset detection
-      for (let i = 0; i < data.length; i += 1000) {
-        const amp = Math.abs(data[i]);
-        if (!inRegion && amp > threshold) {
-          inRegion = true;
-          start = i / buffer.sampleRate;
-        } else if (inRegion && amp < threshold / 2) {
-          inRegion = false;
-          const end = i / buffer.sampleRate;
-          if (end - start > 0.1) {
-            newRegions.push({
-              id: Date.now() + i,
-              start,
-              duration: end - start,
-              pitchOffset: 0,
-              timeStretch: 1.0
-            });
-          }
-        }
-      }
-      if (newRegions.length > 0) onUpdateRegions(newRegions);
+      onUpdateRegions([{
+        id: Date.now(),
+        start: 0,
+        duration: buffer.duration,
+        pitchOffset: 0,
+        timeStretch: 1.0
+      }]);
     }
   }, [buffer]);
+
+  const autoSegment = () => {
+    if (!buffer) return;
+    const data = buffer.getChannelData(0);
+    const newRegions = [];
+    const threshold = 0.1;
+    let inRegion = false;
+    let start = 0;
+
+    for (let i = 0; i < data.length; i += 1000) {
+      const amp = Math.abs(data[i]);
+      if (!inRegion && amp > threshold) {
+        inRegion = true;
+        start = i / buffer.sampleRate;
+      } else if (inRegion && amp < threshold / 2) {
+        inRegion = false;
+        const end = i / buffer.sampleRate;
+        if (end - start > 0.1) {
+          newRegions.push({
+            id: Date.now() + i,
+            start,
+            duration: end - start,
+            pitchOffset: 0,
+            timeStretch: 1.0
+          });
+        }
+      }
+    }
+    if (newRegions.length > 0) onUpdateRegions(newRegions);
+  };
 
   useEffect(() => {
     if (!buffer || !canvasRef.current) return;
@@ -187,7 +197,8 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
     <div className="waveform-outer">
       <div className="waveform-header">
         AUDIO EDITOR: {regions.length} blobs
-        <button className="small-btn" style={{ marginLeft: '10px' }} onClick={resetToFull}>全体を一括補正 (全選択)</button>
+        <button className="small-btn" style={{ marginLeft: '10px' }} onClick={resetToFull}>全体を一括 (全選択)</button>
+        <button className="small-btn" style={{ marginLeft: '5px' }} onClick={autoSegment}>自動解析 (アタック検出)</button>
         <span>SHIFT+クリックで分割 / ドラッグで補正</span>
       </div>
       <div className="waveform-container glass">
