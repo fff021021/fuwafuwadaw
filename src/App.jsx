@@ -41,11 +41,12 @@ function App() {
   
   const tracksRef = useRef([]);
   const voicesRef = useRef({}); // To track MIDI voices
+  const isRehydrating = useRef(false);
 
   // loadSession is moved to handleInit to ensure engine.ctx exists
 
   useEffect(() => {
-    if (initialized && tracks.length > 0) {
+    if (initialized && tracks.length > 0 && !isRehydrating.current) {
       if (isPlaying) scheduler.updateTracks(tracks);
       
       // Serialize plugin states (extract values from AudioParams)
@@ -160,9 +161,9 @@ function App() {
     setInitialized(true);
 
     // After engine init, load saved session if any
+    isRehydrating.current = true;
     const data = await persistence.loadProject();
     if (data && data.tracks) {
-      console.log('Loading saved project...', data);
       const rehydrated = await Promise.all(data.tracks.map(async (t) => {
         const gain = engine.ctx.createGain();
         gain.connect(engine.masterGain);
@@ -177,7 +178,7 @@ function App() {
               const p = new Cls(engine.ctx);
               if (ps.params) {
                 Object.keys(ps.params).forEach(k => {
-                  if (p.params[k] && p.params[k].setTargetAtTime) p.params[k].setTargetAtTime(ps.params[k], 0, 0);
+                  if (p.params[k] && p.params[k].setTargetAtTime) p.params[k].setTargetAtTime(ps.params[key], 0, 0);
                   else p.params[k] = ps.params[k];
                 });
               }
@@ -200,8 +201,9 @@ function App() {
       }));
       setTracks(rehydrated);
       tracksRef.current = rehydrated;
-      setProjectLength(data.projectLength || 64);
+      setProjectLength(parseInt(data.projectLength) || 64);
     }
+    setTimeout(() => { isRehydrating.current = false; }, 500);
   };
 
   const setTrackSequence = (newSeq) => {
