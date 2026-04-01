@@ -47,7 +47,13 @@ function App() {
 
   useEffect(() => {
     if (initialized && tracks.length > 0 && !isRehydrating.current) {
-      if (isPlaying) scheduler.updateTracks(tracks);
+      if (isPlaying) {
+        scheduler.updateTracks(tracks);
+        // Real-time parameter update for active sources
+        tracks.forEach(t => {
+          if (t.player) t.player.updateParams(t.regions || []);
+        });
+      }
       
       // Serialize plugin states (extract values from AudioParams)
       const sanitizedTracks = tracks.map(t => ({
@@ -445,8 +451,9 @@ function App() {
             </div>
             
             <div className="timeline-container" style={{ position: 'relative', overflowX: 'auto', display: 'flex' }}>
-              <div className="timeline-sidebar-spacer" style={{ width: '60px', minWidth: '60px', height: '100%', sticky: 'left', background: 'rgba(0,0,0,0.3)', zIndex: 10 }}></div>
-              <div className="timeline-main" style={{ position: 'relative', flex: 1 }}>
+              <div className="timeline-sidebar-spacer" style={{ width: '60px', minWidth: '60px', height: '100%', position: 'sticky', left: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10, borderRight: '2px solid #000' }}></div>
+              <div className="timeline-main" style={{ position: 'relative', flex: 1, minWidth: 'fit-content' }}>
+                {/* Playhead is absolute and layered on top of Waveform/PianoRoll */}
                 <Playhead 
                   currentStep={currentStep >= 0 ? currentStep : seekPos} 
                   projectLength={projectLength} 
