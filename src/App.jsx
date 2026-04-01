@@ -18,11 +18,12 @@ import PluginRack from './components/PluginRack';
 import Visualizer from './components/Visualizer';
 import midi from './audio/Midi';
 import recorder from './audio/Recorder';
-import AudioTrackPlayer from './audio/AudioTrack';
 import exporter from './audio/Exporter';
 import WaveformView from './components/WaveformView';
 import Playhead from './components/Playhead';
 import persistence from './audio/Persistence';
+import PluginWindow from './components/PluginWindow';
+import PluginControls from './components/PluginControls';
 
 function App() {
   const [initialized, setInitialized] = useState(false);
@@ -34,6 +35,7 @@ function App() {
   const [zoom, setZoom] = useState(1.0);
   const [projectLength, setProjectLength] = useState(64);
   const [seekPos, setSeekPos] = useState(0);
+  const [openPlugins, setOpenPlugins] = useState([]); // List of plugin objects
   
   const tracksRef = useRef([]);
   const voicesRef = useRef({}); // To track MIDI voices
@@ -187,6 +189,16 @@ function App() {
       togglePlayback(false);
       setTimeout(() => togglePlayback(true), 50);
     }
+  };
+
+  const openPluginWindow = (plugin) => {
+    if (!openPlugins.find(p => p.id === plugin.id)) {
+      setOpenPlugins([...openPlugins, plugin]);
+    }
+  };
+
+  const closePluginWindow = (pluginId) => {
+    setOpenPlugins(openPlugins.filter(p => p.id !== pluginId));
   };
 
   const importAudio = async (e) => {
@@ -377,11 +389,27 @@ function App() {
               <PluginRack 
                 track={activeTrack} 
                 onPluginAdded={(p) => {
-                  setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, plugins: [...t.plugins, p] } : t));
+                  const next = tracks.map(t => t.id === activeTrackId ? { ...t, plugins: [...t.plugins, p] } : t);
+                  setTracks(next);
+                  tracksRef.current = next;
                 }} 
+                onOpenPlugin={openPluginWindow}
               />
             </div>
           </footer>
+
+          {/* Floating Plugin Windows */}
+          {openPlugins.map((plugin, idx) => (
+            <PluginWindow 
+              key={plugin.id} 
+              id={plugin.id} 
+              title={plugin.name} 
+              onClose={() => closePluginWindow(plugin.id)}
+              initialPos={{ x: 300 + idx * 30, y: 150 + idx * 30 }}
+            >
+              <PluginControls plugin={plugin} />
+            </PluginWindow>
+          ))}
         </>
       )}
     </div>
