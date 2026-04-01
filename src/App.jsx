@@ -21,7 +21,6 @@ import recorder from './audio/Recorder';
 import AudioTrackPlayer from './audio/AudioTrack';
 import exporter from './audio/Exporter';
 import WaveformView from './components/WaveformView';
-import scheduler from './audio/Scheduler';
 
 function App() {
   const [initialized, setInitialized] = useState(false);
