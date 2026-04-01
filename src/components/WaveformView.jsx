@@ -147,11 +147,37 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
     }
   };
 
+  const handleDoubleClick = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    const clickTime = (x / width) * buffer.duration;
+
+    const targetIndex = regions.findIndex(r => 
+      clickTime >= r.start && clickTime <= r.start + r.duration
+    );
+
+    if (targetIndex > -1) {
+      const r = regions[targetIndex];
+      const r1 = { ...r, duration: clickTime - r.start };
+      const r2 = { 
+        ...r, 
+        id: Date.now() + Math.random(), 
+        start: clickTime, 
+        duration: (r.start + r.duration) - clickTime 
+      };
+
+      const nextRegions = [...regions];
+      nextRegions.splice(targetIndex, 1, r1, r2);
+      onUpdateRegions(nextRegions);
+    }
+  };
+
   return (
     <div className="waveform-outer">
       <div className="waveform-header">
         AUDIO EDITOR: {regions.length} blobs detected
-        <span>ドラッグでピッチ・タイミング補正</span>
+        <span>ドラッグで補正 / ダブルクリックで分割</span>
       </div>
       <div className="waveform-container glass">
         <canvas 
@@ -159,6 +185,7 @@ const WaveformView = ({ buffer, regions = [], onUpdateRegions, zoom = 1.0 }) => 
           width={canvasWidth} 
           height={200} 
           onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
         />
       </div>
     </div>
