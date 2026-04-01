@@ -13,13 +13,15 @@ class Scheduler {
     this.isPlaying = false;
     this.onStepChange = null; // Callback for UI
     this.tracks = [];
+    this.maxSteps = 64;
   }
 
-  start(ctx, tracks, onStep, initialStep = 0) {
+  start(ctx, tracks, onStep, maxSteps = 64, initialStep = 0) {
     if (this.isPlaying) return;
     this.isPlaying = true;
     this.tracks = tracks;
     this.onStepChange = onStep;
+    this.maxSteps = maxSteps;
     this.currentStep = initialStep;
     this.nextNoteTime = ctx.currentTime;
     this.scheduler(ctx);
@@ -68,8 +70,8 @@ class Scheduler {
     const secondsPerBeat = 60.0 / this.bpm;
     this.nextNoteTime += 0.25 * secondsPerBeat; // Add beat length to last note time (16th notes)
     this.currentStep++;
-    if (this.currentStep >= 64) {
-      this.currentStep = 0; // Loop 4 bars
+    if (this.currentStep >= this.maxSteps) {
+      this.currentStep = 0; 
     }
   }
 }

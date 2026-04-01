@@ -266,7 +266,7 @@ function App() {
             if (track.player) track.player.play(time, 0, track.regions || []);
           });
         }
-      }, seekPos);
+      }, projectLength, seekPos);
     } else {
       scheduler.stop();
       tracksRef.current.forEach(track => {
